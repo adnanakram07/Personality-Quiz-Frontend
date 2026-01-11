@@ -515,7 +515,7 @@ export default function QuizPage() {
     const fetchQuestions = async () => {
       try {
         console.log("🔄 Fetching questions from API...");
-        const response = await fetch("http://localhost:3000/questions");
+        const response = await fetch("https://personalityquizbackend.vercel.app/questions");
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -634,7 +634,7 @@ export default function QuizPage() {
     console.log("📦 SUBMIT PAYLOAD:", payload);
 
     try {
-      const response = await fetch("http://localhost:3000/quiz/submit", {
+      const response = await fetch("https://personalityquizbackend.vercel.app/quiz/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
