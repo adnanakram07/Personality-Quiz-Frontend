@@ -1,3 +1,6 @@
+"use client";
+
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, RefreshCw, Zap, Award, TrendingUp } from "lucide-react";
