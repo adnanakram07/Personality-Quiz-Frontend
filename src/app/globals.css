@@ -344,10 +344,11 @@ body {
   }
   
   .details-header {
-    top: 30px;
+    top: 100px;
     left: 30px;
-    font-size: 0.95rem;
+    font-size: 1rem;
     letter-spacing: 0.25em;
+    
   }
   
   .slide__title {
