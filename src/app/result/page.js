@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { Sparkles, RefreshCw, Zap, Award, TrendingUp } from "lucide-react";
+import { Sparkles, RefreshCw, Zap, Award, TrendingUp, BarChart3, Trophy } from "lucide-react";
 
 // Result Page Component
 function ResultPage({ user, result, onRetake }) {
@@ -15,7 +15,7 @@ function ResultPage({ user, result, onRetake }) {
     );
   }
 
-  const { topPersonality } = result;
+  const { topPersonality, personalityScores } = result;
   const containerRef = useRef(null);
   const videoRef = useRef(null);
   
@@ -23,6 +23,25 @@ function ResultPage({ user, result, onRetake }) {
   const [videoError, setVideoError] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const [showConfetti, setShowConfetti] = useState(true);
+  
+  // Map personality codes to full names
+  const personalityNameMap = {
+    'ANALYST': 'The Analyst',
+    'LEADER': 'The Leader',
+    'CREATIVE': 'The Creative',
+    'SUPPORTER': 'The Supporter'
+  };
+
+  // Convert personalityScores object to sorted array with full names
+  const sortedScores = Object.entries(personalityScores || {})
+    .map(([code, score]) => ({ 
+      name: personalityNameMap[code] || code, 
+      score: score,
+      code: code
+    }))
+    .sort((a, b) => b.score - a.score);
+  
+  console.log('Sorted Scores:', sortedScores); // Debug log
   
   const getPersonalityVideo = (personalityName) => {
     const name = personalityName.toLowerCase();
@@ -88,6 +107,14 @@ function ResultPage({ user, result, onRetake }) {
   // Confetti particles
   const confettiCount = 50;
   const confettiParticles = Array.from({ length: confettiCount });
+
+  // Find max score for bar chart scaling
+  const maxScore = sortedScores.length > 0 ? Math.abs(sortedScores[0].score) : 100;
+  
+  // Calculate percentage based on score range (-50 to +50)
+  const getPercentage = (score) => {
+    return ((score + 50) / 100) * 100;
+  };
 
   return (
     <div 
@@ -221,7 +248,7 @@ function ResultPage({ user, result, onRetake }) {
           </motion.div>
 
           {/* Results card with video integration */}
-          <div className="grid lg:grid-cols-2 gap-6 md:gap-8 items-start lg:items-center">
+          <div className="grid lg:grid-cols-2 gap-6 md:gap-8 items-start lg:items-center mb-8 md:mb-12">
             
             {/* Left side - Text content */}
             <motion.div
@@ -444,6 +471,237 @@ function ResultPage({ user, result, onRetake }) {
               )}
             </motion.div>
           </div>
+
+          {/* Score Breakdown Section */}
+          {sortedScores.length > 0 && (
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.0 }}
+              className="w-full max-w-5xl mx-auto"
+            >
+              <div className="relative p-6 md:p-10 lg:p-12 rounded-3xl overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, rgba(255,69,0,0.08) 0%, rgba(0,0,0,0.85) 100%)`,
+                  border: `2px solid ${theme.primary}30`,
+                  boxShadow: `0 25px 50px -12px ${theme.primary}20`
+                }}
+              >
+                {/* Multiple decorative blur orbs */}
+                <motion.div
+                  className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-3xl"
+                  style={{ background: theme.primary }}
+                  animate={{
+                    scale: [1, 1.4, 1],
+                    opacity: [0.06, 0.12, 0.06]
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                  }}
+                />
+                <motion.div
+                  className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full blur-3xl"
+                  style={{ background: theme.secondary }}
+                  animate={{
+                    scale: [1.2, 1, 1.2],
+                    opacity: [0.08, 0.04, 0.08]
+                  }}
+                  transition={{
+                    duration: 7,
+                    repeat: Infinity,
+                    delay: 1
+                  }}
+                />
+
+                <div className="relative z-10">
+                  {/* Section header with enhanced styling */}
+                  <motion.div 
+                    className="flex items-center justify-center gap-3 md:gap-4 mb-8 md:mb-10"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1.1 }}
+                  >
+                    <motion.div
+                      animate={{
+                        rotate: [0, 10, -10, 0]
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <BarChart3 size={32} style={{ color: theme.accent }} className="md:w-10 md:h-10" />
+                    </motion.div>
+                    <h3 className="text-2xl md:text-3xl lg:text-4xl font-black bg-gradient-to-r bg-clip-text text-transparent"
+                      style={{
+                        backgroundImage: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.accent} 100%)`
+                      }}
+                    >
+                      Your Personality Breakdown
+                    </h3>
+                  </motion.div>
+
+                  {/* Score bars with enhanced design */}
+                  <div className="space-y-5 md:space-y-6">
+                    {sortedScores.map((scoreData, index) => {
+                      const scoreTheme = getPersonalityTheme(scoreData.name);
+                      const isTopScore = index === 0;
+                      const percentage = getPercentage(scoreData.score);
+                      
+                      return (
+                        <motion.div
+                          key={scoreData.name}
+                          initial={{ x: -50, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: 1.2 + index * 0.12 }}
+                          className="relative group"
+                        >
+                          {/* Card container with hover effect */}
+                          <motion.div
+                            className="relative p-4 md:p-5 rounded-2xl overflow-hidden"
+                            style={{
+                              background: `linear-gradient(135deg, ${scoreTheme.primary}10 0%, rgba(0,0,0,0.3) 100%)`,
+                              border: `1.5px solid ${scoreTheme.primary}30`
+                            }}
+                            whileHover={{
+                              scale: 1.02,
+                              boxShadow: `0 10px 30px ${scoreTheme.primary}40`,
+                              borderColor: `${scoreTheme.primary}60`
+                            }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {/* Glow effect on hover */}
+                            <motion.div
+                              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                              style={{
+                                background: `radial-gradient(circle at center, ${scoreTheme.primary}15 0%, transparent 70%)`
+                              }}
+                            />
+
+                            <div className="relative z-10">
+                              {/* Score label and value */}
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2 md:gap-3">
+                                  {isTopScore && (
+                                    <motion.div
+                                      animate={{
+                                        scale: [1, 1.2, 1],
+                                        rotate: [0, 10, -10, 0]
+                                      }}
+                                      transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                      }}
+                                    >
+                                      <Trophy size={18} style={{ color: theme.accent }} className="md:w-6 md:h-6" />
+                                    </motion.div>
+                                  )}
+                                  <span className="text-base md:text-lg lg:text-xl font-bold text-gray-100">
+                                    {scoreData.name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs md:text-sm text-gray-400 font-medium">
+                                    {scoreData.score > 0 ? '+' : ''}{scoreData.score}
+                                  </span>
+                                  <span 
+                                    className="text-xl md:text-2xl lg:text-3xl font-black"
+                                    style={{ color: scoreTheme.primary }}
+                                  >
+                                    {Math.round(percentage)}%
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Progress bar container with enhanced design */}
+                              <div 
+                                className="relative h-4 md:h-5 rounded-full overflow-hidden"
+                                style={{
+                                  background: 'rgba(0,0,0,0.4)',
+                                  border: `1px solid rgba(255,255,255,0.08)`,
+                                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)'
+                                }}
+                              >
+                                {/* Animated progress fill with gradient */}
+                                <motion.div
+                                  className="absolute left-0 top-0 h-full rounded-full relative overflow-hidden"
+                                  style={{
+                                    background: `linear-gradient(90deg, ${scoreTheme.primary} 0%, ${scoreTheme.secondary} 50%, ${scoreTheme.accent} 100%)`,
+                                    boxShadow: `0 0 25px ${scoreTheme.primary}70, inset 0 1px 2px rgba(255,255,255,0.3)`
+                                  }}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${percentage}%` }}
+                                  transition={{
+                                    duration: 1.8,
+                                    delay: 1.3 + index * 0.12,
+                                    ease: [0.34, 1.56, 0.64, 1]
+                                  }}
+                                >
+                                  {/* Glossy highlight effect */}
+                                  <div 
+                                    className="absolute top-0 left-0 right-0 h-1/2 opacity-40"
+                                    style={{
+                                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)'
+                                    }}
+                                  />
+                                </motion.div>
+
+                                {/* Animated shimmer effect */}
+                                <motion.div
+                                  className="absolute top-0 left-0 h-full w-32"
+                                  style={{
+                                    background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
+                                  }}
+                                  animate={{
+                                    x: ["-100%", "400%"]
+                                  }}
+                                  transition={{
+                                    duration: 2.5,
+                                    delay: 1.5 + index * 0.12,
+                                    ease: "easeInOut"
+                                  }}
+                                />
+
+                                {/* Pulsing glow effect */}
+                                <motion.div
+                                  className="absolute inset-0 rounded-full"
+                                  style={{
+                                    boxShadow: `inset 0 0 20px ${scoreTheme.primary}40`
+                                  }}
+                                  animate={{
+                                    opacity: [0.3, 0.6, 0.3]
+                                  }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    delay: index * 0.2
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer note */}
+                  <motion.p
+                    className="text-center text-sm md:text-base text-gray-500 mt-8 md:mt-10"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.8 }}
+                  >
+                    Scores range from -50 to +50 based on your responses
+                  </motion.p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
