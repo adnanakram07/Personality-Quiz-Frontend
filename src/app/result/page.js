@@ -1,12 +1,20 @@
 "use client";
 
-
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, RefreshCw, Zap, Award, TrendingUp } from "lucide-react";
 
 // Result Page Component
 function ResultPage({ user, result, onRetake }) {
+  // ✅ ADD NULL CHECKS - This fixes the Vercel error
+  if (!result || !result.topPersonality) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-gray-400">Loading results...</p>
+      </div>
+    );
+  }
+
   const { topPersonality } = result;
   const containerRef = useRef(null);
   const videoRef = useRef(null);
