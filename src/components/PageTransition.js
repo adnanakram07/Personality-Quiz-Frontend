@@ -55,7 +55,7 @@ export default function PageTransition({ isTransitioning, onTransitionComplete }
         path.setAttribute("d", end);
       }, 900);
 
-      // Complete transition
+      
       setTimeout(() => {
         if (onTransitionComplete) {
           onTransitionComplete();
@@ -66,7 +66,7 @@ export default function PageTransition({ isTransitioning, onTransitionComplete }
 
   if (!isVisible) return null;
 
-  // Use simple fade transition for mobile
+  
   if (isMobile) {
     return (
       <div className={`fixed inset-0 z-[9999] transition-opacity duration-300 ${
@@ -79,7 +79,7 @@ export default function PageTransition({ isTransitioning, onTransitionComplete }
     );
   }
 
-  // Original SVG animation for desktop
+  
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-none">
       <svg 

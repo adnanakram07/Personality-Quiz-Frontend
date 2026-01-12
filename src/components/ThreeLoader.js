@@ -178,10 +178,14 @@ export default function ThreeLoader({ onLoadComplete, minDuration = 2000 }) {
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center">
-      <div
-        ref={wrapRef}
-        className="relative w-[500px] h-[500px]"
-      />
+      <div className="relative w-[500px] h-[500px]">
+        <div ref={wrapRef} className="w-full h-full" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-white text-xl font-light tracking-widest uppercase animate-pulse mt-25">
+            Loading
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

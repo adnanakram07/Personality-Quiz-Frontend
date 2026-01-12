@@ -8,6 +8,8 @@ export default function useSliceSlider() {
   const isAnimating = useRef(false);
   const validationCallback = useRef(null);
   const touchStartY = useRef(0);
+  const wheelTimeout = useRef(null);
+  const wheelDelta = useRef(0);
 
   // Detect mobile device
   useEffect(() => {
@@ -20,23 +22,6 @@ export default function useSliceSlider() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const showSlide = useCallback((nextIndex) => {
-    const slides = document.querySelectorAll(".slide");
-    if (!slides.length || isAnimating.current) return;
-
-    isAnimating.current = true;
-
-    slides.forEach((slide, i) => {
-      slide.classList.toggle("is-active", i === nextIndex);
-    });
-
-    setIndex(nextIndex);
-
-    setTimeout(() => {
-      isAnimating.current = false;
-    }, 900);
-  }, []);
-
   const nextSlide = useCallback(() => {
     if (isAnimating.current) return;
     
@@ -46,16 +31,19 @@ export default function useSliceSlider() {
     if (currentIndex === 1 && validationCallback.current) {
       const canProceed = validationCallback.current();
       if (!canProceed) {
-        return; // Block navigation
+        return;
       }
     }
     
     const newIndex = Math.min(currentIndex + 1, 2);
     if (newIndex !== currentIndex) {
-      showSlide(newIndex);
+      isAnimating.current = true;
       setIndex(newIndex);
+      setTimeout(() => {
+        isAnimating.current = false;
+      }, 600);
     }
-  }, [showSlide, index]);
+  }, [index]);
 
   const prevSlide = useCallback(() => {
     if (isAnimating.current) return;
@@ -63,10 +51,13 @@ export default function useSliceSlider() {
     const currentIndex = index;
     const newIndex = Math.max(currentIndex - 1, 0);
     if (newIndex !== currentIndex) {
-      showSlide(newIndex);
+      isAnimating.current = true;
       setIndex(newIndex);
+      setTimeout(() => {
+        isAnimating.current = false;
+      }, 600);
     }
-  }, [showSlide, index]);
+  }, [index]);
 
   const setValidation = useCallback((callback) => {
     validationCallback.current = callback;
@@ -74,19 +65,38 @@ export default function useSliceSlider() {
 
   const goToSlide = useCallback((slideIndex) => {
     if (isAnimating.current) return;
-    showSlide(slideIndex);
+    isAnimating.current = true;
     setIndex(slideIndex);
-  }, [showSlide]);
+    setTimeout(() => {
+      isAnimating.current = false;
+    }, 600);
+  }, []);
 
   useEffect(() => {
     const onWheel = (e) => {
-      if (isAnimating.current || isMobile) return; // Disable wheel on mobile
+      if (isAnimating.current || isMobile) return;
       
-      if (e.deltaY > 0) {
-        nextSlide();
-      } else {
-        prevSlide();
+      // Accumulate wheel delta
+      wheelDelta.current += e.deltaY;
+      
+      // Clear existing timeout
+      if (wheelTimeout.current) {
+        clearTimeout(wheelTimeout.current);
       }
+      
+      
+      wheelTimeout.current = setTimeout(() => {
+        
+        if (Math.abs(wheelDelta.current) > 100) {
+          if (wheelDelta.current > 0) {
+            nextSlide();
+          } else {
+            prevSlide();
+          }
+        }
+        
+        wheelDelta.current = 0;
+      }, 50);
     };
 
     const onKey = (e) => {
@@ -104,7 +114,7 @@ export default function useSliceSlider() {
       }
     };
     
-    // Touch events for mobile
+    
     const onTouchStart = (e) => {
       touchStartY.current = e.touches[0].clientY;
     };
@@ -115,7 +125,6 @@ export default function useSliceSlider() {
       const touchEndY = e.changedTouches[0].clientY;
       const diff = touchStartY.current - touchEndY;
       
-      // Minimum distance to trigger slide change
       if (Math.abs(diff) > 50) {
         if (diff > 0) {
           nextSlide();
@@ -133,15 +142,13 @@ export default function useSliceSlider() {
       window.addEventListener("touchend", onTouchEnd, { passive: true });
     }
 
-    showSlide(0);
-
     return () => {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [nextSlide, prevSlide, showSlide, isMobile]);
+  }, [nextSlide, prevSlide, isMobile]);
 
   return {
     index,

@@ -1,7 +1,17 @@
 "use client";
 
+import { Manrope } from 'next/font/google';
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import ResultPage from '../result/page.js';
+import { useQuiz } from '@/context/QuizContext'; // Import the context
+
+// Configure Manrope font
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+});
 
 // Simple loader component
 function ThreeLoader({ onLoadComplete, minDuration = 1500 }) {
@@ -186,19 +196,19 @@ function QuestionCard({
   return (
     <div 
       ref={ref} 
-      className={`min-h-screen flex items-center justify-center py-20 px-6 transition-all duration-700 ${
+      className={`min-h-screen flex items-center justify-center transition-all duration-700 ${
         isActive ? 'z-20' : 'z-10'
-      }`}
+      } ${isMobile ? 'py-20 px-6' : 'py-16 px-6 lg:py-20 lg:px-8 xl:px-12 2xl:px-16'}`}
     >
       <motion.div 
-        className="max-w-4xl w-full"
+        className="max-w-5xl w-full"
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
         variants={containerVariants}
         transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
       >
         <motion.div 
-          className="bg-gradient-to-br from-[rgba(255,255,255,0.05)] to-[rgba(255,255,255,0.02)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] rounded-2xl p-8 md:p-12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden"
+          className="bg-gradient-to-br from-[rgba(255,255,255,0.05)] to-[rgba(255,255,255,0.02)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] rounded-2xl p-6 md:p-8 lg:p-10 xl:p-12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden"
           variants={cardVariants}
           style={{ 
             transformStyle: "preserve-3d",
@@ -231,14 +241,14 @@ function QuestionCard({
           </motion.div>
           
           <motion.h2 
-            className={`${isMobile ? 'text-2xl' : 'text-3xl md:text-5xl'} font-bold text-[#f5f5f5] leading-tight mb-8`}
+            className={`${isMobile ? 'text-2xl' : 'text-2xl md:text-3xl lg:text-4xl xl:text-5xl'} font-bold text-[#f5f5f5] leading-tight mb-6 lg:mb-8`}
             variants={itemVariants}
           >
             {question.question_text}
           </motion.h2>
           
           <motion.div 
-            className="w-full h-2 bg-[rgba(255,255,255,0.1)] rounded-full overflow-hidden mb-8"
+            className="w-full h-2 bg-[rgba(255,255,255,0.1)] rounded-full overflow-hidden mb-6 lg:mb-8"
             variants={itemVariants}
           >
             <motion.div 
@@ -250,7 +260,7 @@ function QuestionCard({
           </motion.div>
           
           <motion.div 
-            className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}
+            className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-3 lg:gap-4 xl:gap-5'}`}
             variants={containerVariants}
           >
             {question.options.map((option, optionIndex) => (
@@ -270,14 +280,14 @@ function QuestionCard({
                   id={`option-${option.id}`}
                   onClick={() => selectOption(question.id, option.id)}
                   disabled={isTransitioning}
-                  className={`w-full h-full p-6 rounded-xl text-left transition-all duration-500 relative overflow-hidden group ${
+                  className={`w-full h-full p-5 lg:p-6 rounded-xl text-left transition-all duration-500 relative overflow-hidden group ${
                     answers[question.id] === option.id
                       ? "bg-gradient-to-r from-[#ff4500] to-[#ff5722] text-white scale-[1.02] shadow-[0_0_30px_rgba(255,69,0,0.3)] border-2 border-[#ff4500]"
                       : "bg-gradient-to-br from-[rgba(255,255,255,0.08)] to-[rgba(255,255,255,0.04)] backdrop-blur-sm border-2 border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,69,0,0.5)] hover:shadow-[0_10px_30px_-10px_rgba(255,69,0,0.3)]"
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <span className={`${isMobile ? 'text-base' : 'text-lg'} font-medium`}>{option.option_text}</span>
+                    <span className={`${isMobile ? 'text-base' : 'text-base lg:text-lg'} font-medium`}>{option.option_text}</span>
                     {answers[question.id] === option.id && (
                       <motion.div 
                         initial={{ scale: 0, rotate: -180 }}
@@ -308,161 +318,8 @@ function QuestionCard({
   );
 }
 
-// Result Page Component
-function ResultPage({ user, result, onRetake }) {
-  const { topPersonality, personalityScores } = result;
-  
-  const sortedScores = Object.entries(personalityScores || {})
-    .sort(([, a], [, b]) => b - a);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#0a0a0a] text-[#f5f5f5] overflow-x-hidden relative">
-      <motion.div 
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-      >
-        <motion.div 
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-[rgba(255,69,0,0.05)] rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.5, 0.7, 0.5]
-          }}
-          transition={{ 
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div 
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[rgba(255,69,0,0.05)] rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.5, 0.6, 0.5]
-          }}
-          transition={{ 
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        />
-      </motion.div>
-
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-8">
-        <motion.div 
-          className="max-w-4xl w-full"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.div 
-            className="bg-gradient-to-br from-[rgba(255,255,255,0.05)] to-[rgba(255,255,255,0.02)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] rounded-2xl p-8 md:p-12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[rgba(255,69,0,0.2)] to-transparent rounded-bl-full opacity-50"></div>
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[rgba(120,69,255,0.2)] to-transparent rounded-tr-full opacity-50"></div>
-            
-            <motion.div 
-              className="text-center space-y-8 relative z-10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <motion.h1 
-                className="text-4xl md:text-5xl font-bold"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                Hey <span className="text-[#ff4500]">{user.name}</span>,
-              </motion.h1>
-
-              <motion.div 
-                className="space-y-4"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                <h2 className="text-2xl md:text-3xl text-[rgba(255,255,255,0.8)]">
-                  your personality is
-                </h2>
-                <h3 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-[#ff4500] to-[#ff5722] bg-clip-text text-transparent">
-                  {topPersonality.name}
-                </h3>
-              </motion.div>
-
-              <motion.p 
-                className="text-xl md:text-2xl text-[rgba(255,255,255,0.7)] max-w-2xl mx-auto"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                {topPersonality.description}
-              </motion.p>
-
-              {/* Personality Scores */}
-              <motion.div 
-                className="mt-12 space-y-4"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                <h4 className="text-xl font-semibold text-[rgba(255,255,255,0.9)] mb-6">
-                  Your Personality Breakdown
-                </h4>
-                <div className="grid gap-4">
-                  {sortedScores.map(([type, score], index) => (
-                    <motion.div 
-                      key={type}
-                      className="bg-[rgba(255,255,255,0.05)] rounded-xl p-4"
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-lg font-medium">{type}</span>
-                        <span className="text-[#ff4500] font-semibold">{score}</span>
-                      </div>
-                      <div className="w-full h-2 bg-[rgba(255,255,255,0.1)] rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-gradient-to-r from-[#ff4500] to-[#ff5722]"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.max(0, (score + 50))}%` }}
-                          transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.button
-                onClick={onRetake}
-                className="mt-12 px-12 py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-[#ff4500] to-[#ff5722] text-white shadow-[0_0_40px_rgba(255,69,0,0.4)] relative overflow-hidden group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
-                <span className="relative z-10">RETAKE QUIZ</span>
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 -skew-x-12"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ 
-                    x: "100%", 
-                    opacity: 0.2,
-                    transition: { duration: 0.6 }
-                  }}
-                />
-              </motion.button>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
 export default function QuizPage() {
+  const { user: contextUser } = useQuiz(); // Get user from context
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -475,7 +332,6 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState(null);
-  const [user, setUser] = useState({ name: "Stranger", age: 25, email: "stranger@example.com" });
   const [apiError, setApiError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -495,12 +351,13 @@ export default function QuizPage() {
     setIsClient(true);
   }, []);
   
-  // Detect mobile device
+  // Detect mobile device - Updated breakpoint for better responsiveness
   useEffect(() => {
     if (!isClient) return;
     
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      // Mobile: < 1024px, Tablet/Small Laptop: 1024-1279px, Desktop/MacBook: >= 1280px
+      setIsMobile(window.innerWidth < 1024);
     };
     
     checkMobile();
@@ -622,10 +479,11 @@ export default function QuizPage() {
 
     setIsSubmitting(true);
 
+    // Use the context user instead of the local state
     const payload = {
-      name: user.name,
-      age: Number(user.age),
-      email: user.email,
+      name: contextUser.name || "Stranger",
+      age: Number(contextUser.age) || 25,
+      email: contextUser.email || "stranger@example.com",
       answers: Object.entries(answers).map(([questionId, optionId]) => ({
         optionId: Number(optionId),
       })),
@@ -727,7 +585,7 @@ export default function QuizPage() {
 
   // Show result page
   if (showResult && result) {
-    return <ResultPage user={user} result={result} onRetake={handleRetake} />;
+    return <ResultPage user={contextUser} result={result} onRetake={handleRetake} />;
   }
 
   if (questions.length === 0) {
@@ -805,7 +663,7 @@ export default function QuizPage() {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#0a0a0a] text-[#f5f5f5] overflow-x-hidden relative scroll-smooth">
+    <div ref={containerRef} className={`${manrope.className} min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#0a0a0a] text-[#f5f5f5] overflow-x-hidden relative scroll-smooth`}>
       <motion.div 
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{ y: backgroundY }}
@@ -852,7 +710,7 @@ export default function QuizPage() {
       {/* Mobile Progress Bar - Only visible on mobile */}
       {isMobile && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent p-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="px-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-[rgba(255,255,255,0.7)]">
                 Question {Math.floor(progress * questions.length / 100) + 1} of {questions.length}
@@ -873,38 +731,41 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* Desktop Progress Navigation - Hidden on mobile */}
+      {/* Desktop Progress Navigation - Responsive for all screen sizes */}
       {!isMobile && (
         <div 
-          className="fixed left-20 top-1/2 -translate-y-1/2 z-50 hidden lg:block"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-40 hidden lg:flex lg:justify-center lg:items-center
+                     w-[28%] xl:w-[26%] 2xl:w-[24%] px-4 xl:px-6 2xl:px-8"
           style={{ perspective: "1000px" }}
         >
           <div 
             ref={progressTrackRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="relative transition-all duration-500 ease-out"
+            className="relative transition-all duration-500 ease-out w-full"
             style={{ 
               transformStyle: "preserve-3d",
-              transform: `rotateY(${trackRotation.rotateY}deg) rotateX(${trackRotation.rotateX}deg)`
+              transform: `rotateY(${trackRotation.rotateY}deg) rotateX(${trackRotation.rotateX}deg)`,
+              maxWidth: "min(400px, 90%)"
             }}
           >
             <div 
-              className="w-80 p-5 bg-[rgba(255,69,0,0.1)] backdrop-blur-md rounded-xl mb-8 flex items-center justify-between shadow-[0_0_30px_rgba(255,69,0,0.1)]"
+              className="w-full p-4 xl:p-5 bg-[rgba(255,69,0,0.1)] backdrop-blur-md rounded-xl mb-6 xl:mb-8 flex items-center justify-between shadow-[0_0_30px_rgba(255,69,0,0.1)]"
               style={{ transform: "translateZ(50px)" }}
             >
-              <span className="text-sm font-medium truncate max-w-[140px]">
+              <span className="text-xs xl:text-sm font-medium truncate flex-1 mr-2">
                 {currentSection || "Start"}
               </span>
-              <span className="text-[#ff4500] font-semibold text-sm">
+              <span className="text-[#ff4500] font-semibold text-xs xl:text-sm">
                 {Math.round(progress)}%
               </span>
             </div>
 
-            <div className="flex flex-col gap-5" style={{ transformStyle: "preserve-3d" }}>
+            <div className="flex flex-col gap-3 xl:gap-4 2xl:gap-5" style={{ transformStyle: "preserve-3d" }}>
               {questions.map((question, index) => {
                 const active = isActive(index);
                 const hovered = hoveredNav === index;
+                const isAnswered = answers[question.id] !== undefined;
                 
                 return (
                   <div
@@ -912,30 +773,40 @@ export default function QuizPage() {
                     onClick={() => scrollToQuestion(index)}
                     onMouseEnter={() => setHoveredNav(index)}
                     onMouseLeave={() => setHoveredNav(null)}
-                    className="relative w-80 h-18 p-5 bg-[rgba(255,255,255,0.03)] rounded-xl cursor-pointer overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.2)] transition-all duration-300"
+                    className="relative w-full min-h-[60px] xl:min-h-[68px] 2xl:min-h-[72px] p-4 xl:p-5 rounded-xl cursor-pointer overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.2)] transition-all duration-300"
                     style={{
                       transformStyle: "preserve-3d",
                       transform: `translateZ(${active ? '30px' : hovered ? '40px' : '0px'})`,
-                      background: active ? "rgba(255, 69, 0, 0.1)" : "rgba(255, 255, 255, 0.03)",
+                      background: active 
+                        ? (isAnswered ? "rgba(34, 197, 94, 0.1)" : "rgba(255, 69, 0, 0.1)")
+                        : (isAnswered ? "rgba(7, 218, 84, 0.05)" : "rgba(255, 255, 255, 0.03)"),
+                      border: isAnswered ? "1px solid rgba(34, 197, 94, 0.2)" : "none"
                     }}
                   >
                     <div 
-                      className="absolute inset-0 bg-[rgba(255,69,0,0.1)]"
+                      className="absolute inset-0"
                       style={{ 
                         width: `${sectionProgress[index] || 0}%`,
-                        transition: "width 0.1s linear"
+                        transition: "width 0.1s linear",
+                        background: isAnswered 
+                          ? "rgba(34, 197, 94, 0.1)" 
+                          : "rgba(255,69,0,0.1)"
                       }}
                     />
                     
                     <div className="relative z-10 flex justify-between items-center" style={{ transformStyle: "preserve-3d" }}>
-                      <span className={`text-sm font-medium transition-colors duration-300 ${
+                      <span className={`text-xs xl:text-sm font-medium transition-colors duration-300 truncate flex-1 mr-2 ${
                         active || hovered ? "text-[#f5f5f5]" : "text-[rgba(255,255,255,0.7)]"
                       }`}>
-                        {question.question_text.slice(0, 35)}...
+                        {question.question_text.slice(0, 28)}...
                       </span>
-                      <span className={`text-xs text-[#ff4500] transition-opacity duration-300 ${
+                      <span className={`text-[10px] xl:text-xs transition-opacity duration-300 ${
                         active || hovered ? "opacity-100" : "opacity-0"
-                      }`}>
+                      }`}
+                      style={{
+                        color: isAnswered ? "#22c55e" : "#ff4500"
+                      }}
+                      >
                         {String(index + 1).padStart(2, "0")}
                       </span>
                     </div>
@@ -947,7 +818,12 @@ export default function QuizPage() {
         </div>
       )}
 
-      <div className={`w-full relative z-10 ${isMobile ? 'pt-20' : ''}`}>
+      {/* Main Content Area - Responsive for all screen sizes */}
+      <div className={`relative z-10 ${
+        isMobile 
+          ? 'pt-20 w-full' 
+          : 'lg:ml-[28%] lg:w-[72%] xl:ml-[26%] xl:w-[74%] 2xl:ml-[24%] 2xl:w-[76%]'
+      }`}>
         {questions.map((question, index) => (
           <div key={question.id} ref={el => sectionsRef.current[index] = el}>
             <QuestionCard
@@ -967,30 +843,33 @@ export default function QuizPage() {
           </div>
         ))}
 
-        <div className={`min-h-screen flex items-center justify-center ${isMobile ? 'py-10 px-4' : 'py-20 px-6'}`}>
+        {/* Submit Section */}
+        <div className={`min-h-screen flex items-center justify-center ${
+          isMobile ? 'py-10 px-4' : 'py-16 px-6 lg:py-20 lg:px-8 xl:px-12 2xl:px-16'
+        }`}>
           <motion.div 
-            className="max-w-4xl w-full"
+            className="max-w-5xl w-full"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: false, amount: 0.3 }}
             variants={containerVariants}
           >
             <motion.div 
-              className="bg-gradient-to-br from-[rgba(255,255,255,0.05)] to-[rgba(255,255,255,0.02)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] rounded-2xl p-8 md:p-12 text-center shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden"
+              className="bg-gradient-to-br from-[rgba(255,255,255,0.05)] to-[rgba(255,255,255,0.02)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] rounded-2xl p-6 md:p-8 lg:p-10 xl:p-12 text-center shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden"
               variants={cardVariants}
             >
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[rgba(255,69,0,0.2)] to-transparent rounded-bl-full opacity-50"></div>
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[rgba(120,69,255,0.2)] to-transparent rounded-tr-full opacity-50"></div>
               
               <motion.h2 
-                className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-6xl'} font-bold bg-gradient-to-r from-[#f5f5f5] to-[#ff4500] bg-clip-text text-transparent mb-6`}
+                className={`${isMobile ? 'text-3xl' : 'text-3xl md:text-4xl lg:text-5xl xl:text-6xl'} font-bold bg-gradient-to-r from-[#f5f5f5] to-[#ff4500] bg-clip-text text-transparent mb-6`}
                 variants={itemVariants}
               >
                 Ready to see your results?
               </motion.h2>
               
               <motion.p 
-                className={`${isMobile ? 'text-lg' : 'text-xl'} text-[rgba(255,255,255,0.7)] mb-8`}
+                className={`${isMobile ? 'text-lg' : 'text-lg md:text-xl lg:text-2xl'} text-[rgba(255,255,255,0.7)] mb-8`}
                 variants={itemVariants}
               >
                 You've answered {Object.keys(answers).length} of {questions.length} questions
@@ -1000,7 +879,7 @@ export default function QuizPage() {
                 <motion.button
                   onClick={handleSubmit}
                   disabled={Object.keys(answers).length !== questions.length}
-                  className={`${isMobile ? 'px-8 py-3 text-base' : 'px-12 py-4 text-lg'} font-semibold rounded-xl transition-all duration-300 relative overflow-hidden group ${
+                  className={`${isMobile ? 'px-8 py-3 text-base' : 'px-10 py-3 lg:px-12 lg:py-4 text-base lg:text-lg'} font-semibold rounded-xl transition-all duration-300 relative overflow-hidden group ${
                     Object.keys(answers).length === questions.length
                       ? "bg-gradient-to-r from-[#ff4500] to-[#ff5722] text-white shadow-[0_0_40px_rgba(255,69,0,0.4)]"
                       : "bg-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.3)] cursor-not-allowed"

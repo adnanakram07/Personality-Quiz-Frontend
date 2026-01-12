@@ -19,7 +19,7 @@ const rem = REM({
 });
 
 export const metadata = {
-  title: "Paradox Personality Quiz",
+  title: "Paradox Personality Quizzzzz",
   description: "Interactive personality assessment",
 };
 
